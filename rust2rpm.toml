@@ -1,6 +1,4 @@
 [package]
-url = "https://atuin.sh"
-source-url = "https://github.com/atuinsh/atuin/archive/refs/tags/v%{version}.tar.gz"
 extra-files = [
     "%{_datadir}/bash-completion/completions/atuin",
     "%{_datadir}/fish/completions/atuin",
@@ -51,6 +49,10 @@ post = [
 
     "cat > %{buildroot}%{_sysconfdir}/profile.d/atuin.sh <<EOF",
     "if [[ \"\\$SHELL\" == \"/bin/bash\" ]]; then",
+    "# The bash shell requires (at least) a script called",
+    "# bash-preexec.sh (https://github.com/rcaloras/bash-preexec), so",
+    "# insert it here.",
+    "$(cat %{make_pwd_}/bash-preexec.sh)", 
     "EOF",
 
     "cat >> %{buildroot}%{_sysconfdir}/profile.d/atuin.sh <<EOF",
