@@ -7,7 +7,8 @@
 *.rpm
 *.src.rpm
 
-# ignore vendor bundles
+# ignore vendor bundles and crates
 atuin-*/
+*.crate
 *.tar.gz
 *.tar.xz
