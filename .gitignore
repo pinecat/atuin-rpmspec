@@ -1,4 +1,13 @@
+# rust2rpm.toml should be the single source of truth, and so new builds
+# should always start with this file, instead of editing the generated
+# rpm spec file
+*.spec
+
+# ignore rpm related files
+*.rpm
 *.src.rpm
+
+# ignore vendor bundles
 atuin-*/
 *.tar.gz
 *.tar.xz
