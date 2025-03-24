@@ -4,21 +4,17 @@ packages:
     specfile_path: atuin.spec
     downstream_package_name: atuin
     upstream_package_name: atuin
-    actions: &Actions-Package-rust2rpm-workspace
-      # Note: in upstream, the License has to be fixed manually after rust2rpm is run
-      # Copy from %cargo_license_summary in the build.log
-      fix-spec-file:
-        - sh -c 'tar -xf ${PACKIT_PROJECT_ARCHIVE}'
-        - sh -c 'rust2rpm ./${PACKIT_UPSTREAM_PACKAGE_NAME}-${PACKIT_PROJECT_VERSION}'
-        # Note: These should not be automated because workspace packages vary case-by-case and rust2rpm does not support
-        #       such automation. Adding simple sed expansion to make it more easily reproduced
-        # Patch the license file
-        - sh -c 'sed -i "/SourceLicense/{N;N;N;s/.*/cat license.txt/e}" ${PACKIT_DOWNSTREAM_PACKAGE_NAME}.spec'
-        # Change the default %cargo_install
-        - sh -c 'sed -i "s|%cargo_install.*|install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/|" ${PACKIT_DOWNSTREAM_PACKAGE_NAME}.spec'
+    # Dummy actions we want to use the spec file as-is because we are doing
+    # non-standard changes on top of it
+    # Changes:
+    # - Fix the License section with the %cargo_license_summary in the build.log
+    # - Change the %cargo_install to a manual install command
+    # - Move the default /etc/profile.d script to a separate `atuin-all-users` package
+    # - Make bash-preexec a Recommends requirement for `atuin-all-users`
+    actions:
+      fix-spec-file: []
       create-archive:
-        - sh -c 'spectool -g -s0 ${PACKIT_DOWNSTREAM_PACKAGE_NAME}.spec'
-        - sh -c 'echo v${PACKIT_PROJECT_VERSION}.tar.gz'
+        - sh -c 'echo ${PACKIT_DOWNSTREAM_PACKAGE_NAME}.spec'
       get-current-version:
         - sh -c 'rpmspec -q --qf "%{Version}" --srpm ${PACKIT_DOWNSTREAM_PACKAGE_NAME}.spec'
   bash-preexec:

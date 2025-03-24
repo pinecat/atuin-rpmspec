@@ -50,7 +50,6 @@ BuildRequires:  protobuf-devel
 %if %{with check}
 BuildRequires:  postgresql-test-rpm-macros
 %endif
-Requires:       bash-preexec
 
 %global _description %{expand:
 Atuin replaces your existing shell history with a SQLite database, and records
@@ -59,6 +58,18 @@ encrypted synchronisation of your history between machines, via an Atuin server.
 }
 
 %description %{_description}
+
+%package        all-users
+Summary:        atuin init script for all users
+Requires:       atuin%{?_isa} = %{version}-%{release}
+BuildArch:      noarch
+
+# TODO: Make these a requirement when bash-preexec is packaged?
+Recommends:     bash-preexec-all-users
+
+%description    all-users %_description
+
+This package contains the init script to enable atuin for all users.
 
 %prep
 %autosetup -n atuin-%{version} -p1
@@ -71,22 +82,48 @@ encrypted synchronisation of your history between machines, via an Atuin server.
 %cargo_build -a
 %{cargo_license_summary -a}
 %{cargo_license -a} > LICENSE.dependencies
+# Create auxiliary files
+mkdir -p other_installs/shell_completion
+# Generate all shell-completions
+for shell in bash fish zsh; do
+  %{buildroot}%{_bindir}/atuin gen-completions --shell ${shell} -o shell_installs
+done
+
+# Write the atuin init scripts statically
+mkdir -p other_installs/libexec/atuin
+for shell in bash fish zsh; do
+  %{buildroot}%{_bindir}/atuin init ${shell} > other_installs/libexec/atuin/atuin-init.${shell}
+done
+
+# Write the profile.d files enabling the install for all users
+# Currently only bash is supported
+mkdir -p other_installs/profile.d
+cat > other_installs/profile.d/atuin.sh <<EOF
+# atuin initialization script for all users
+
+# Check for bash environment
+if [ -n "\${BASH_VERSION-}" ]; then
+  # Skip noninteractive shells.
+  [[ \$- != *i* ]] && return
+  # Use the statically written atuin init script
+  source %{_libexecdir}/atuin/atuin-init.bash
+fi
+EOF
 
 %install
-install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/
-# Generate all of the shell-completions
-for completion in bash fish zsh; do
-  %{buildroot}%{_bindir}/atuin gen-completions --shell $completion -o .
-done
-install -Dpm 644 atuin.bash %{buildroot}%{_datadir}/bash-completion/completions/atuin
-install -Dpm 644 atuin.fish %{buildroot}%{_datadir}/fish/completions/atuin
-install -Dpm 644 _atuin %{buildroot}%{_datadir}/zsh/site-functions/atuin
+install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/atuin
+# Install the auxiliary files
+# Shell completions
+install -Dpm 0644 other_installs/shell_completion/atuin.bash %{buildroot}%{_datadir}/bash-completion/completions/atuin
+install -Dpm 0644 other_installs/shell_completion/atuin.fish %{buildroot}%{_datadir}/fish/completions/atuin
+install -Dpm 0644 other_installs/shell_completion/_atuin %{buildroot}%{_datadir}/zsh/site-functions/atuin
 
-# Add atuin to default profile
-mkdir -p %{buildroot}%{_sysconfdir}/profile.d
-cat > %{buildroot}%{_sysconfdir}/profile.d/atuin.sh <<EOF
-$(%{buildroot}%{_bindir}/atuin init bash)
-EOF
+# Static atuin init scripts
+for shell in bash fish zsh; do
+  install -Dpm 0755 other_installs/libexec/atuin/atuin-init.${shell} %{buildroot}%{_libexecdir}/atuin/atuin-init.${shell}
+done
+# Profile.d init script for all users
+install -Dpm 0755 other_installs/profile.d/atuin.sh %{buildroot}%{_sysconfdir}/profile.d/atuin.sh
 
 %if %{with check}
 %check
@@ -112,6 +149,9 @@ export PGTESTS_PORT=5432
 %{_datadir}/bash-completion/completions/atuin
 %{_datadir}/fish/completions/atuin
 %{_datadir}/zsh/site-functions/atuin
+%{_libexecdir}/atuin
+
+%files all-users
 %config %{_sysconfdir}/profile.d/atuin.sh
 
 %changelog
