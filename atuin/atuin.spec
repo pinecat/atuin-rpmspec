@@ -46,6 +46,9 @@ Patch12:        atuin-fix-metrics.patch
 # * Update tiny-bip39 to 2.0.0
 # * Cherry-picked https://github.com/atuinsh/atuin/pull/2643
 Patch13:        atuin-Update-tiny-bip39.patch
+# * Update tracing-tree to 0.4.0
+# * Cherry-picked https://github.com/atuinsh/atuin/pull/2259
+Patch14:        atuin-update-tracing-tree.patch
 
 BuildRequires:  cargo-rpm-macros >= 24
 BuildRequires:  protobuf-devel

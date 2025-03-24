@@ -51,6 +51,14 @@ comments = [
 file = "atuin-Update-tiny-bip39.patch"
 number = 13
 
+[[package.extra-patches]]
+comments = [
+    "Update tracing-tree to 0.4.0",
+    "Cherry-picked https://github.com/atuinsh/atuin/pull/2259",
+]
+file = "atuin-update-tracing-tree.patch"
+number = 14
+
 [requires]
 build = [
     "protobuf-devel",

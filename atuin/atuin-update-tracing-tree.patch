@@ -1,0 +1,16 @@
+Subject: [PATCH] chore(deps): bump tracing-tree from 0.3.1 to 0.4.0 (#2259)
+---
+Index: crates/atuin/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/Cargo.toml b/crates/atuin/Cargo.toml
+--- a/crates/atuin/Cargo.toml	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
++++ b/crates/atuin/Cargo.toml	(revision adf63e5205d5003b1252eabc20a5589f3902da18)
+@@ -93,4 +93,4 @@
+ arboard = { version = "3.3", optional = true, features = ["wayland-data-control"] }
+ 
+ [dev-dependencies]
+-tracing-tree = "0.3"
++tracing-tree = "0.4"
