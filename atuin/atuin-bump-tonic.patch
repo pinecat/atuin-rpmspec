@@ -1,0 +1,143 @@
+Subject: [PATCH] chore(deps): update to sqlx 0.8 (#2343)
+chore(deps): update to tonic 0.12, prost 0.13 (#2250)
+---
+Index: crates/atuin-daemon/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-daemon/Cargo.toml b/crates/atuin-daemon/Cargo.toml
+--- a/crates/atuin-daemon/Cargo.toml	(revision e27da8826f9025e59003ee5856329e4f95483e09)
++++ b/crates/atuin-daemon/Cargo.toml	(revision 58fb6ff96dea5f076801f763200983cf338c7c3d)
+@@ -25,15 +25,17 @@
+ tracing-subscriber = { workspace = true }
+ 
+ dashmap = "5.5.3"
+-tonic-types = "0.11.0"
+-tonic = "0.11"
+-prost = "0.12"
+-prost-types = "0.12"
++tonic-types = "0.12.0"
++tonic = "0.12"
++prost = "0.13"
++prost-types = "0.13"
+ tokio-stream = {version="0.1.14", features=["net"]}
++hyper-util = "0.1"
++
+ rand.workspace = true
+ 
+ [target.'cfg(target_os = "linux")'.dependencies]
+ listenfd = "1.0.1"
+ 
+ [build-dependencies]
+-tonic-build = "0.11"
++tonic-build = "0.12"
+Index: crates/atuin-daemon/src/client.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-daemon/src/client.rs b/crates/atuin-daemon/src/client.rs
+--- a/crates/atuin-daemon/src/client.rs	(revision e27da8826f9025e59003ee5856329e4f95483e09)
++++ b/crates/atuin-daemon/src/client.rs	(revision 58fb6ff96dea5f076801f763200983cf338c7c3d)
+@@ -4,6 +4,8 @@
+ use tonic::transport::{Channel, Endpoint, Uri};
+ use tower::service_fn;
+ 
++use hyper_util::rt::TokioIo;
++
+ #[cfg(unix)]
+ use tokio::net::UnixStream;
+ 
+@@ -23,9 +25,11 @@
+     pub async fn new(path: String) -> Result<Self> {
+         let channel = Endpoint::try_from("http://atuin_local_daemon:0")?
+             .connect_with_connector(service_fn(move |_: Uri| {
+-                let path = path.to_string();
++                let path = path.clone();
+ 
+-                UnixStream::connect(path)
++                async move {
++                    Ok::<_, std::io::Error>(TokioIo::new(UnixStream::connect(path.clone()).await?))
++                }
+             }))
+             .await
+             .map_err(|_| eyre!("failed to connect to local atuin daemon. Is it running?"))?;
+@@ -40,6 +44,7 @@
+         let channel = Endpoint::try_from("http://atuin_local_daemon:0")?
+             .connect_with_connector(service_fn(move |_: Uri| {
+                 let url = format!("127.0.0.1:{}", port);
++
+                 TcpStream::connect(url)
+             }))
+             .await
+Index: crates/atuin-daemon/src/server.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-daemon/src/server.rs b/crates/atuin-daemon/src/server.rs
+--- a/crates/atuin-daemon/src/server.rs	(revision e27da8826f9025e59003ee5856329e4f95483e09)
++++ b/crates/atuin-daemon/src/server.rs	(revision 58fb6ff96dea5f076801f763200983cf338c7c3d)
+@@ -207,6 +207,7 @@
+     };
+ 
+     let uds_stream = UnixListenerStream::new(uds);
++
+     Server::builder()
+         .add_service(HistoryServer::new(history))
+         .serve_with_incoming_shutdown(
+@@ -214,6 +215,7 @@
+             shutdown_signal(cleanup.then_some(socket_path.into())),
+         )
+         .await?;
++
+     Ok(())
+ }
+ 
+Index: Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml	(revision 58fb6ff96dea5f076801f763200983cf338c7c3d)
++++ b/Cargo.toml	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
+@@ -53,7 +53,7 @@
+ default-features = false
+ 
+ [workspace.dependencies.sqlx]
+-version = "0.7"
++version = "0.8"
+ features = ["runtime-tokio-rustls", "time", "postgres", "uuid"]
+ 
+ # Config for 'cargo dist'
+Index: crates/atuin-common/src/lib.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-common/src/lib.rs b/crates/atuin-common/src/lib.rs
+--- a/crates/atuin-common/src/lib.rs	(revision 58fb6ff96dea5f076801f763200983cf338c7c3d)
++++ b/crates/atuin-common/src/lib.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
+@@ -32,7 +32,7 @@
+             Uuid: sqlx::Decode<'r, DB>,
+         {
+             fn decode(
+-                value: <DB as sqlx::database::HasValueRef<'r>>::ValueRef,
++                value: DB::ValueRef<'r>,
+             ) -> std::result::Result<Self, sqlx::error::BoxDynError> {
+                 Uuid::decode(value).map(Self)
+             }
+@@ -44,8 +44,9 @@
+         {
+             fn encode_by_ref(
+                 &self,
+-                buf: &mut <DB as sqlx::database::HasArguments<'q>>::ArgumentBuffer,
+-            ) -> sqlx::encode::IsNull {
++                buf: &mut DB::ArgumentBuffer<'q>,
++            ) -> Result<sqlx::encode::IsNull, Box<(dyn std::error::Error + Send + Sync + 'static)>>
++            {
+                 self.0.encode_by_ref(buf)
+             }
+         }

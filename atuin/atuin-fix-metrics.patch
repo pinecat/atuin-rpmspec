@@ -1,0 +1,167 @@
+Subject: [PATCH] refactor: update metrics deps
+fix(metrics): update macros after update
+---
+Index: crates/atuin-server/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/Cargo.toml b/crates/atuin-server/Cargo.toml
+--- a/crates/atuin-server/Cargo.toml	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/Cargo.toml	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
+@@ -35,5 +35,5 @@
+ rustls-pemfile = "2.1"
+ argon2 = "0.5"
+ semver = { workspace = true }
+-metrics-exporter-prometheus = "0.12.1"
+-metrics = "0.21.1"
++metrics-exporter-prometheus = "0.16.0"
++metrics = "0.24.1"
+Index: crates/atuin-server/src/handlers/history.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/src/handlers/history.rs b/crates/atuin-server/src/handlers/history.rs
+--- a/crates/atuin-server/src/handlers/history.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/src/handlers/history.rs	(revision 340ac2100dedfe96a276be8c1eb67df9c94af1ad)
+@@ -65,7 +65,7 @@
+ 
+     if req.sync_ts.unix_timestamp_nanos() < 0 || req.history_ts.unix_timestamp_nanos() < 0 {
+         error!("client asked for history from < epoch 0");
+-        counter!("atuin_history_epoch_before_zero", 1);
++        counter!("atuin_history_epoch_before_zero").increment(1);
+ 
+         return Err(
+             ErrorResponse::reply("asked for history from before epoch 0")
+@@ -95,7 +95,7 @@
+         user.id
+     );
+ 
+-    counter!("atuin_history_returned", history.len() as u64);
++    counter!("atuin_history_returned").increment(history.len() as u64);
+ 
+     Ok(Json(SyncHistoryResponse { history }))
+ }
+@@ -131,7 +131,7 @@
+     let State(AppState { database, settings }) = state;
+ 
+     debug!("request to add {} history items", req.len());
+-    counter!("atuin_history_uploaded", req.len() as u64);
++    counter!("atuin_history_uploaded").increment(req.len() as u64);
+ 
+     let mut history: Vec<NewHistory> = req
+         .into_iter()
+@@ -151,7 +151,7 @@
+         // Don't return an error here. We want to insert as much of the
+         // history list as we can, so log the error and continue going.
+         if !keep {
+-            counter!("atuin_history_too_long", 1);
++            counter!("atuin_history_too_long").increment(1);
+ 
+             tracing::warn!(
+                 "history too long, got length {}, max {}",
+Index: crates/atuin-server/src/handlers/user.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/src/handlers/user.rs b/crates/atuin-server/src/handlers/user.rs
+--- a/crates/atuin-server/src/handlers/user.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/src/handlers/user.rs	(revision 340ac2100dedfe96a276be8c1eb67df9c94af1ad)
+@@ -143,7 +143,7 @@
+         .await;
+     }
+ 
+-    counter!("atuin_users_registered", 1);
++    counter!("atuin_users_registered").increment(1);
+ 
+     match db.add_session(&new_session).await {
+         Ok(_) => Ok(Json(RegisterResponse { session: token })),
+@@ -170,7 +170,7 @@
+             .with_status(StatusCode::INTERNAL_SERVER_ERROR));
+     };
+ 
+-    counter!("atuin_users_deleted", 1);
++    counter!("atuin_users_deleted").increment(1);
+ 
+     Ok(Json(DeleteUserResponse {}))
+ }
+Index: crates/atuin-server/src/handlers/v0/record.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/src/handlers/v0/record.rs b/crates/atuin-server/src/handlers/v0/record.rs
+--- a/crates/atuin-server/src/handlers/v0/record.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/src/handlers/v0/record.rs	(revision 340ac2100dedfe96a276be8c1eb67df9c94af1ad)
+@@ -25,14 +25,14 @@
+         "request to add records"
+     );
+ 
+-    counter!("atuin_record_uploaded", records.len() as u64);
++    counter!("atuin_record_uploaded").increment(records.len() as u64);
+ 
+     let keep = records
+         .iter()
+         .all(|r| r.data.data.len() <= settings.max_record_size || settings.max_record_size == 0);
+ 
+     if !keep {
+-        counter!("atuin_record_too_large", 1);
++        counter!("atuin_record_too_large").increment(1);
+ 
+         return Err(
+             ErrorResponse::reply("could not add records; record too large")
+@@ -108,7 +108,7 @@
+         }
+     };
+ 
+-    counter!("atuin_record_downloaded", records.len() as u64);
++    counter!("atuin_record_downloaded").increment(records.len() as u64);
+ 
+     Ok(Json(records))
+ }
+Index: crates/atuin-server/src/handlers/v0/store.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/src/handlers/v0/store.rs b/crates/atuin-server/src/handlers/v0/store.rs
+--- a/crates/atuin-server/src/handlers/v0/store.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/src/handlers/v0/store.rs	(revision 340ac2100dedfe96a276be8c1eb67df9c94af1ad)
+@@ -24,14 +24,14 @@
+     }) = state;
+ 
+     if let Err(e) = database.delete_store(&user).await {
+-        counter!("atuin_store_delete_failed", 1);
++        counter!("atuin_store_delete_failed").increment(1);
+         error!("failed to delete store {e:?}");
+ 
+         return Err(ErrorResponse::reply("failed to delete store")
+             .with_status(StatusCode::INTERNAL_SERVER_ERROR));
+     }
+ 
+-    counter!("atuin_store_deleted", 1);
++    counter!("atuin_store_deleted").increment(1);
+ 
+     Ok(())
+ }
+Index: crates/atuin-server/src/metrics.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-server/src/metrics.rs b/crates/atuin-server/src/metrics.rs
+--- a/crates/atuin-server/src/metrics.rs	(revision 24d4d73a2bcbbccf97c2d5b322ad6a6dcc10c2e2)
++++ b/crates/atuin-server/src/metrics.rs	(revision 340ac2100dedfe96a276be8c1eb67df9c94af1ad)
+@@ -49,8 +49,8 @@
+         ("status", status),
+     ];
+ 
+-    metrics::increment_counter!("http_requests_total", &labels);
+-    metrics::histogram!("http_requests_duration_seconds", latency, &labels);
++    metrics::counter!("http_requests_total", &labels).increment(1);
++    metrics::histogram!("http_requests_duration_seconds", &labels).record(latency);
+ 
+     response
+ }

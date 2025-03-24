@@ -21,19 +21,27 @@ encrypted synchronisation of your history between machines, via an Atuin server.
 
 [[package.extra-patches]]
 comments = [
-    "Fix dependencies",
-    "- Switch cli-clipboard for arboard",
-    "  https://github.com/atuinsh/atuin/pull/2067",
-    "- Bump metrics dependencies",
-    "  https://github.com/atuinsh/atuin/pull/2062",
-    "- Update tonic and prost dependencies",
-    "  https://github.com/atuinsh/atuin/pull/2250",
-    "  https://github.com/atuinsh/atuin/pull/2251",
-    "- Lower serde_with dependency",
-    "Cherry-picked in: https://github.com/LecrisUT/atuin/tree/fedora-18.3.0-patch",
+    "Switch cli-clipboard for arboard",
+    "Cherry-picked from https://github.com/atuinsh/atuin/pull/2067",
 ]
-file = "atuin-18.3.0-Fix_dependencies.patch"
+file = "atuin-drop-cli-clipboard.patch"
 number = 10
+
+[[package.extra-patches]]
+comments = [
+    "Update tonic and prost dependencies",
+    "Cherry-picked from https://github.com/atuinsh/atuin/pull/2250 and https://github.com/atuinsh/atuin/pull/2251",
+]
+file = "atuin-bump-tonic.patch"
+number = 11
+
+[[package.extra-patches]]
+comments = [
+    "Bump metrics dependencies",
+    "Cherry-picked from https://github.com/atuinsh/atuin/pull/2062",
+]
+file = "atuin-fix-metrics.patch"
+number = 12
 
 [requires]
 build = [

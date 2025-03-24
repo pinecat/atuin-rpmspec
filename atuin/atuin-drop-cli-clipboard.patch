@@ -1,0 +1,53 @@
+Subject: [PATCH] Replace cli-clipboard with arboard
+---
+Index: crates/atuin/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/Cargo.toml b/crates/atuin/Cargo.toml
+--- a/crates/atuin/Cargo.toml	(revision 9be49e434e549d6b13928b530139b66fef6171f1)
++++ b/crates/atuin/Cargo.toml	(revision e27da8826f9025e59003ee5856329e4f95483e09)
+@@ -38,7 +38,7 @@
+ sync = ["atuin-client/sync"]
+ daemon = ["atuin-client/daemon"]
+ server = ["atuin-server", "atuin-server-postgres"]
+-clipboard = ["cli-clipboard"]
++clipboard = ["arboard"]
+ check-update = ["atuin-client/check-update"]
+ 
+ [dependencies]
+@@ -86,8 +86,11 @@
+ sysinfo = "0.30.7"
+ regex="1.10.4"
+ 
+-[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+-cli-clipboard = { version = "0.4.0", optional = true }
++[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
++arboard = { version = "3.3", optional = true }
++
++[target.'cfg(target_os = "linux")'.dependencies]
++arboard = { version = "3.3", optional = true, features = ["wayland-data-control"] }
+ 
+ [dev-dependencies]
+ tracing-tree = "0.3"
+Index: crates/atuin/src/command/client/search/interactive.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/src/command/client/search/interactive.rs b/crates/atuin/src/command/client/search/interactive.rs
+--- a/crates/atuin/src/command/client/search/interactive.rs	(revision 9be49e434e549d6b13928b530139b66fef6171f1)
++++ b/crates/atuin/src/command/client/search/interactive.rs	(revision e27da8826f9025e59003ee5856329e4f95483e09)
+@@ -1174,7 +1174,10 @@
+     any(target_os = "windows", target_os = "macos", target_os = "linux")
+ ))]
+ fn set_clipboard(s: String) {
+-    cli_clipboard::set_contents(s).unwrap();
++    let mut ctx = arboard::Clipboard::new().unwrap();
++    ctx.set_text(s).unwrap();
++    // Use the clipboard context to make sure it is saved
++    ctx.get_text().unwrap();
+ }
+ 
+ #[cfg(not(all(
