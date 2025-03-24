@@ -1,0 +1,172 @@
+Subject: [PATCH] Update to tiny-bip39 2.0.0
+---
+Index: crates/atuin-client/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-client/Cargo.toml b/crates/atuin-client/Cargo.toml
+--- a/crates/atuin-client/Cargo.toml	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
++++ b/crates/atuin-client/Cargo.toml	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
+@@ -68,7 +68,7 @@
+ hex = { version = "0.4", optional = true }
+ sha2 = { version = "0.10", optional = true }
+ indicatif = "0.17.7"
+-tiny-bip39 = "1"
++tiny-bip39 = "2"
+ 
+ [dev-dependencies]
+ tokio = { version = "1", features = ["full"] }
+Index: crates/atuin-client/src/login.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin-client/src/login.rs b/crates/atuin-client/src/login.rs
+--- a/crates/atuin-client/src/login.rs	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
++++ b/crates/atuin-client/src/login.rs	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
+@@ -23,22 +23,17 @@
+     let key = match bip39::Mnemonic::from_phrase(&key, bip39::Language::English) {
+         Ok(mnemonic) => encode_key(Key::from_slice(mnemonic.entropy()))?,
+         Err(err) => {
+-            if let Some(err) = err.downcast_ref::<bip39::ErrorKind>() {
+-                match err {
+-                    // assume they copied in the base64 key
+-                    bip39::ErrorKind::InvalidWord => key,
+-                    bip39::ErrorKind::InvalidChecksum => {
+-                        bail!("key mnemonic was not valid")
+-                    }
+-                    bip39::ErrorKind::InvalidKeysize(_)
+-                    | bip39::ErrorKind::InvalidWordLength(_)
+-                    | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
+-                        bail!("key was not the correct length")
+-                    }
++            match err {
++                // assume they copied in the base64 key
++                bip39::ErrorKind::InvalidWord(_) => key,
++                bip39::ErrorKind::InvalidChecksum => {
++                    bail!("key mnemonic was not valid")
++                }
++                bip39::ErrorKind::InvalidKeysize(_)
++                | bip39::ErrorKind::InvalidWordLength(_)
++                | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
++                    bail!("key was not the correct length")
+                 }
+-            } else {
+-                // unknown error. assume they copied the base64 key
+-                key
+             }
+         }
+     };
+Index: crates/atuin/Cargo.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/Cargo.toml b/crates/atuin/Cargo.toml
+--- a/crates/atuin/Cargo.toml	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
++++ b/crates/atuin/Cargo.toml	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
+@@ -74,7 +74,7 @@
+ semver = { workspace = true }
+ rustix = { workspace = true }
+ runtime-format = "0.1.3"
+-tiny-bip39 = "1"
++tiny-bip39 = "2"
+ futures-util = "0.3"
+ fuzzy-matcher = "0.3.7"
+ colored = "2.0.4"
+Index: crates/atuin/src/command/client/account/login.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/src/command/client/account/login.rs b/crates/atuin/src/command/client/account/login.rs
+--- a/crates/atuin/src/command/client/account/login.rs	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
++++ b/crates/atuin/src/command/client/account/login.rs	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
+@@ -66,22 +66,17 @@
+             match bip39::Mnemonic::from_phrase(&key, bip39::Language::English) {
+                 Ok(mnemonic) => encode_key(Key::from_slice(mnemonic.entropy()))?,
+                 Err(err) => {
+-                    if let Some(err) = err.downcast_ref::<bip39::ErrorKind>() {
+-                        match err {
+-                            // assume they copied in the base64 key
+-                            bip39::ErrorKind::InvalidWord => key,
+-                            bip39::ErrorKind::InvalidChecksum => {
+-                                bail!("key mnemonic was not valid")
+-                            }
+-                            bip39::ErrorKind::InvalidKeysize(_)
+-                            | bip39::ErrorKind::InvalidWordLength(_)
+-                            | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
+-                                bail!("key was not the correct length")
+-                            }
++                    match err {
++                        // assume they copied in the base64 key
++                        bip39::ErrorKind::InvalidWord(_) => key,
++                        bip39::ErrorKind::InvalidChecksum => {
++                            bail!("key mnemonic was not valid")
++                        }
++                        bip39::ErrorKind::InvalidKeysize(_)
++                        | bip39::ErrorKind::InvalidWordLength(_)
++                        | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
++                            bail!("key was not the correct length")
+                         }
+-                    } else {
+-                        // unknown error. assume they copied the base64 key
+-                        key
+                     }
+                 }
+             }
+Index: crates/atuin/src/command/client/store/rekey.rs
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/crates/atuin/src/command/client/store/rekey.rs b/crates/atuin/src/command/client/store/rekey.rs
+--- a/crates/atuin/src/command/client/store/rekey.rs	(revision f3c09096c3938e833671f7d263e496aa7217d5cd)
++++ b/crates/atuin/src/command/client/store/rekey.rs	(revision d21ffc03955e9a8474a0d6e29367ec92f8b57c01)
+@@ -20,30 +20,23 @@
+         let key = if let Some(key) = self.key.clone() {
+             println!("Re-encrypting store with specified key");
+ 
+-            let key = match bip39::Mnemonic::from_phrase(&key, bip39::Language::English) {
++            match bip39::Mnemonic::from_phrase(&key, bip39::Language::English) {
+                 Ok(mnemonic) => encode_key(Key::from_slice(mnemonic.entropy()))?,
+                 Err(err) => {
+-                    if let Some(err) = err.downcast_ref::<bip39::ErrorKind>() {
+-                        match err {
+-                            // assume they copied in the base64 key
+-                            bip39::ErrorKind::InvalidWord => key,
+-                            bip39::ErrorKind::InvalidChecksum => {
+-                                bail!("key mnemonic was not valid")
+-                            }
+-                            bip39::ErrorKind::InvalidKeysize(_)
+-                            | bip39::ErrorKind::InvalidWordLength(_)
+-                            | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
+-                                bail!("key was not the correct length")
+-                            }
+-                        }
+-                    } else {
+-                        // unknown error. assume they copied the base64 key
+-                        key
+-                    }
+-                }
+-            };
+-
+-            key
++                    match err {
++                        // assume they copied in the base64 key
++                        bip39::ErrorKind::InvalidWord(_) => key,
++                        bip39::ErrorKind::InvalidChecksum => {
++                            bail!("key mnemonic was not valid")
++                        }
++                        bip39::ErrorKind::InvalidKeysize(_)
++                        | bip39::ErrorKind::InvalidWordLength(_)
++                        | bip39::ErrorKind::InvalidEntropyLength(_, _) => {
++                            bail!("key was not the correct length")
++                        }
++                    }
++                }
++            }
+         } else {
+             println!("Re-encrypting store with freshly-generated key");
+             let (_, encoded) = generate_encoded_key()?;

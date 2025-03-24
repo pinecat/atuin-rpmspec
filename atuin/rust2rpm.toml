@@ -43,6 +43,14 @@ comments = [
 file = "atuin-fix-metrics.patch"
 number = 12
 
+[[package.extra-patches]]
+comments = [
+    "Update tiny-bip39 to 2.0.0",
+    "Cherry-picked https://github.com/atuinsh/atuin/pull/2643",
+]
+file = "atuin-Update-tiny-bip39.patch"
+number = 13
+
 [requires]
 build = [
     "protobuf-devel",

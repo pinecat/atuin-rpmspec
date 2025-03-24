@@ -43,6 +43,9 @@ Patch11:        atuin-bump-tonic.patch
 # * Bump metrics dependencies
 # * Cherry-picked from https://github.com/atuinsh/atuin/pull/2062
 Patch12:        atuin-fix-metrics.patch
+# * Update tiny-bip39 to 2.0.0
+# * Cherry-picked https://github.com/atuinsh/atuin/pull/2643
+Patch13:        atuin-Update-tiny-bip39.patch
 
 BuildRequires:  cargo-rpm-macros >= 24
 BuildRequires:  protobuf-devel
