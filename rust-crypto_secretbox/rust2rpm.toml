@@ -1,5 +1,0 @@
-[features]
-enable-all = true
-
-[package]
-summary = "Implementation of the XSalsa20Poly1305 and XChaCha20Poly1305 ciphers"
