@@ -17,16 +17,22 @@ SourceLicense:  MIT
 (Apache-2.0 OR BSL-1.0 OR MIT) AND
 (Apache-2.0 OR ISC OR MIT) AND
 (Apache-2.0 OR MIT) AND
-(Apache-2.0 OR MIT OR Zlib) AND
 (Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT) AND
 (BSD-2-Clause OR Apache-2.0 OR MIT) AND
 (BSD-3-Clause) AND
-(BSD-3-Clause AND MIT) AND
 (ISC) AND
 (ISC AND MIT AND OpenSSL) AND
 (MIT) AND
+(MIT AND (MIT OR Apache-2.0)) AND
+(MIT AND Apache-2.0) AND
+(MIT AND BSD-3-Clause) AND
+(MIT OR Apache-2.0) AND
+(MIT OR Apache-2.0 OR Zlib) AND
+(MIT OR Zlib OR Apache-2.0) AND
 (MPL-2.0) AND
-(Unlicense OR MIT)
+(Unlicense OR MIT) AND
+(Zlib) AND
+(Zlib OR Apache-2.0 OR MIT)
 }
 
 License:       %_license
@@ -91,13 +97,13 @@ This package contains the init script to enable atuin for all users.
 mkdir -p other_installs/shell_completion
 # Generate all shell-completions
 for shell in bash fish zsh; do
-  %{buildroot}%{_bindir}/atuin gen-completions --shell ${shell} -o shell_installs
+  ./target/rpm/atuin gen-completions --shell ${shell} -o other_installs/shell_completion
 done
 
 # Write the atuin init scripts statically
 mkdir -p other_installs/libexec/atuin
 for shell in bash fish zsh; do
-  %{buildroot}%{_bindir}/atuin init ${shell} > other_installs/libexec/atuin/atuin-init.${shell}
+  ./target/rpm/atuin init ${shell} > other_installs/libexec/atuin/atuin-init.${shell}
 done
 
 # Write the profile.d files enabling the install for all users

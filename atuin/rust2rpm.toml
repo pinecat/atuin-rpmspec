@@ -88,13 +88,13 @@ build.post = [
     "mkdir -p other_installs/shell_completion",
     "# Generate all shell-completions",
     "for shell in bash fish zsh; do",
-    "  %{buildroot}%{_bindir}/atuin gen-completions --shell ${shell} -o shell_installs",
+    "  ./target/rpm/atuin gen-completions --shell ${shell} -o other_installs/shell_completion",
     "done",
     "",
     "# Write the atuin init scripts statically",
     "mkdir -p other_installs/libexec/atuin",
     "for shell in bash fish zsh; do",
-    "  %{buildroot}%{_bindir}/atuin init ${shell} > other_installs/libexec/atuin/atuin-init.${shell}",
+    "  ./target/rpm/atuin init ${shell} > other_installs/libexec/atuin/atuin-init.${shell}",
     "done",
     "",
     "# Write the profile.d files enabling the install for all users",
@@ -113,6 +113,7 @@ build.post = [
     "EOF",
 ]
 install.post = [
+    "install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/atuin",
     "# Install the auxiliary files",
     "# Shell completions",
     "install -Dpm 0644 other_installs/shell_completion/atuin.bash %{buildroot}%{_datadir}/bash-completion/completions/atuin",
