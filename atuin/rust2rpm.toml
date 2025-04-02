@@ -5,18 +5,19 @@ enable-all = true
 url = "https://atuin.sh"
 source-url = "https://github.com/atuinsh/atuin/archive/refs/tags/v%{version}.tar.gz"
 extra-files = [
-    "%{_datadir}/bash-completion/completions/atuin",
-    "%{_datadir}/fish/completions/atuin",
-    "%{_datadir}/zsh/site-functions/atuin",
+    "%{bash_completions_dir}/atuin.bash",
+    "%{fish_completions_dir}/atuin.fish",
+    "%{zsh_completions_dir}/_atuin",
     "%{_libexecdir}/atuin",
 ]
 
-summary = "magical shell history"
+summary = "Magical shell history"
 
 description = """
 Atuin replaces your existing shell history with a SQLite database, and records
-additional context for your commands. Additionally, it provides optional and fully
-encrypted synchronisation of your history between machines, via an Atuin server.
+additional context for your commands. Additionally, it provides optional and
+fully encrypted synchronization of your history between machines, via an Atuin
+server.
 """
 
 [[package.extra-patches]]
@@ -113,12 +114,12 @@ build.post = [
     "EOF",
 ]
 install.post = [
-    "install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/atuin",
+    "install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}",
     "# Install the auxiliary files",
     "# Shell completions",
-    "install -Dpm 0644 other_installs/shell_completion/atuin.bash %{buildroot}%{_datadir}/bash-completion/completions/atuin",
-    "install -Dpm 0644 other_installs/shell_completion/atuin.fish %{buildroot}%{_datadir}/fish/completions/atuin",
-    "install -Dpm 0644 other_installs/shell_completion/_atuin %{buildroot}%{_datadir}/zsh/site-functions/atuin",
+    "install -Dpm 0644 other_installs/shell_completion/atuin.bash -t %{buildroot}%{bash_completions_dir}",
+    "install -Dpm 0644 other_installs/shell_completion/atuin.fish -t %{buildroot}%{fish_completions_dir}",
+    "install -Dpm 0644 other_installs/shell_completion/_atuin -t %{buildroot}%{zsh_completions_dir}",
     "",
     "# Static atuin init scripts",
     "for shell in bash fish zsh; do",

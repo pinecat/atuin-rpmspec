@@ -4,7 +4,7 @@
 Name:           atuin
 Version:        18.3.0
 Release:        %autorelease
-Summary:        magical shell history
+Summary:        Magical shell history
 
 SourceLicense:  MIT
 %global _license %{shrink:
@@ -64,21 +64,21 @@ BuildRequires:  postgresql-test-rpm-macros
 
 %global _description %{expand:
 Atuin replaces your existing shell history with a SQLite database, and records
-additional context for your commands. Additionally, it provides optional and fully
-encrypted synchronisation of your history between machines, via an Atuin server.
+additional context for your commands. Additionally, it provides optional and
+fully encrypted synchronization of your history between machines, via an Atuin
+server.
 }
 
 %description %{_description}
 
 %package        all-users
 Summary:        atuin init script for all users
-Requires:       atuin%{?_isa} = %{version}-%{release}
+Requires:       atuin = %{version}-%{release}
 BuildArch:      noarch
 
-# TODO: Make these a requirement when bash-preexec is packaged?
-Recommends:     bash-preexec-all-users
+# TODO: Add Requires/Recommends to bash-preexec
 
-%description    all-users %_description
+%description    all-users %{_description}
 
 This package contains the init script to enable atuin for all users.
 
@@ -122,12 +122,12 @@ fi
 EOF
 
 %install
-install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}/atuin
+install -Dpm 0755 target/rpm/atuin -t %{buildroot}%{_bindir}
 # Install the auxiliary files
 # Shell completions
-install -Dpm 0644 other_installs/shell_completion/atuin.bash %{buildroot}%{_datadir}/bash-completion/completions/atuin
-install -Dpm 0644 other_installs/shell_completion/atuin.fish %{buildroot}%{_datadir}/fish/completions/atuin
-install -Dpm 0644 other_installs/shell_completion/_atuin %{buildroot}%{_datadir}/zsh/site-functions/atuin
+install -Dpm 0644 other_installs/shell_completion/atuin.bash -t %{buildroot}%{bash_completions_dir}
+install -Dpm 0644 other_installs/shell_completion/atuin.fish -t %{buildroot}%{fish_completions_dir}
+install -Dpm 0644 other_installs/shell_completion/_atuin -t %{buildroot}%{zsh_completions_dir}
 
 # Static atuin init scripts
 for shell in bash fish zsh; do
@@ -149,7 +149,6 @@ export PGTESTS_PORT=5432
 
 %files
 %license LICENSE
-%license crates/atuin/LICENSE
 %license LICENSE.dependencies
 %doc CHANGELOG.md
 %doc CODE_OF_CONDUCT.md
@@ -157,9 +156,9 @@ export PGTESTS_PORT=5432
 %doc CONTRIBUTORS
 %doc README.md
 %{_bindir}/atuin
-%{_datadir}/bash-completion/completions/atuin
-%{_datadir}/fish/completions/atuin
-%{_datadir}/zsh/site-functions/atuin
+%{bash_completions_dir}/atuin.bash
+%{fish_completions_dir}/atuin.fish
+%{zsh_completions_dir}/_atuin
 %{_libexecdir}/atuin
 
 %files all-users
